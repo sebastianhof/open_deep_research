@@ -24,7 +24,11 @@ uv pip install -r pyproject.toml
 
 3. Set up your `.env` file to customize the environment variables (for model selection, search tools, and other configuration settings):
 ```bash
+# For OpenAI, Anthropic, or other providers:
 cp .env.example .env
+
+# For AWS Bedrock models:
+cp .env.example.aws .env
 ```
 
 4. Launch the assistant with the LangGraph server locally to open LangGraph Studio in your browser:

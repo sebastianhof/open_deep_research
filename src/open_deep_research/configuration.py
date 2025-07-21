@@ -109,7 +109,7 @@ class Configuration(BaseModel):
     )
     # Model Configuration
     summarization_model: str = Field(
-        default="openai:gpt-4.1-nano",
+        default=os.environ.get("SUMMARIZATION_MODEL", "openai:gpt-4.1-nano"),
         metadata={
             "x_oap_ui_config": {
                 "type": "text",
@@ -119,7 +119,7 @@ class Configuration(BaseModel):
         }
     )
     summarization_model_max_tokens: int = Field(
-        default=8192,
+        default=int(os.environ.get("SUMMARIZATION_MODEL_MAX_TOKENS", 8192)),
         metadata={
             "x_oap_ui_config": {
                 "type": "number",
@@ -129,7 +129,7 @@ class Configuration(BaseModel):
         }
     )
     research_model: str = Field(
-        default="openai:gpt-4.1",
+        default=os.environ.get("RESEARCH_MODEL", "openai:gpt-4.1"),
         metadata={
             "x_oap_ui_config": {
                 "type": "text",
@@ -139,7 +139,7 @@ class Configuration(BaseModel):
         }
     )
     research_model_max_tokens: int = Field(
-        default=10000,
+        default=int(os.environ.get("RESEARCH_MODEL_MAX_TOKENS", 10000)),
         metadata={
             "x_oap_ui_config": {
                 "type": "number",
@@ -149,7 +149,7 @@ class Configuration(BaseModel):
         }
     )
     compression_model: str = Field(
-        default="openai:gpt-4.1-mini",
+        default=os.environ.get("COMPRESSION_MODEL", "openai:gpt-4.1-mini"),
         metadata={
             "x_oap_ui_config": {
                 "type": "text",
@@ -159,7 +159,7 @@ class Configuration(BaseModel):
         }
     )
     compression_model_max_tokens: int = Field(
-        default=8192,
+        default=int(os.environ.get("COMPRESSION_MODEL_MAX_TOKENS", 8192)),
         metadata={
             "x_oap_ui_config": {
                 "type": "number",
@@ -169,7 +169,7 @@ class Configuration(BaseModel):
         }
     )
     final_report_model: str = Field(
-        default="openai:gpt-4.1",
+        default=os.environ.get("FINAL_REPORT_MODEL", "openai:gpt-4.1"),
         metadata={
             "x_oap_ui_config": {
                 "type": "text",
@@ -179,7 +179,7 @@ class Configuration(BaseModel):
         }
     )
     final_report_model_max_tokens: int = Field(
-        default=10000,
+        default=int(os.environ.get("FINAL_REPORT_MODEL_MAX_TOKENS", 10000)),
         metadata={
             "x_oap_ui_config": {
                 "type": "number",
