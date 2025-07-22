@@ -27,6 +27,17 @@ class MCPConfig(BaseModel):
     )
     """Whether the MCP server requires authentication"""
 
+
+# Get environment variables 
+SUMMARIZATION_MODEL = os.getenv("SUMMARIZATION_MODEL", "bedrock:us.anthropic.claude-3-haiku-20240307-v1:0")
+RESEARCH_MODEL = os.getenv("RESEARCH_MODEL", "bedrock:us.anthropic.claude-3-7-sonnet-20250219-v1:0")
+COMPRESSION_MODEL = os.getenv("COMPRESSION_MODEL", "bedrock:us.anthropic.claude-3-haiku-20240307-v1:0")
+FINAL_REPORT_MODEL = os.getenv("FINAL_REPORT_MODEL", "bedrock:us.anthropic.claude-3-7-sonnet-20250219-v1:0")
+SUMMARIZATION_MAX_TOKENS = int(os.getenv("SUMMARIZATION_MODEL_MAX_TOKENS", 8192))
+RESEARCH_MAX_TOKENS = int(os.getenv("RESEARCH_MODEL_MAX_TOKENS", 10000))
+COMPRESSION_MAX_TOKENS = int(os.getenv("COMPRESSION_MODEL_MAX_TOKENS", 8192))
+FINAL_REPORT_MAX_TOKENS = int(os.getenv("FINAL_REPORT_MODEL_MAX_TOKENS", 10000))
+
 class Configuration(BaseModel):
     # General Configuration
     max_structured_output_retries: int = Field(
@@ -109,81 +120,81 @@ class Configuration(BaseModel):
     )
     # Model Configuration
     summarization_model: str = Field(
-        default=os.environ.get("SUMMARIZATION_MODEL", "openai:gpt-4.1-nano"),
+        default=SUMMARIZATION_MODEL,
         metadata={
             "x_oap_ui_config": {
                 "type": "text",
-                "default": "openai:gpt-4.1-nano",
+                "default": SUMMARIZATION_MODEL,
                 "description": "Model for summarizing research results from Tavily search results"
             }
         }
     )
     summarization_model_max_tokens: int = Field(
-        default=int(os.environ.get("SUMMARIZATION_MODEL_MAX_TOKENS", 8192)),
+        default=SUMMARIZATION_MAX_TOKENS,
         metadata={
             "x_oap_ui_config": {
                 "type": "number",
-                "default": 8192,
+                "default": SUMMARIZATION_MAX_TOKENS,
                 "description": "Maximum output tokens for summarization model"
             }
         }
     )
     research_model: str = Field(
-        default=os.environ.get("RESEARCH_MODEL", "openai:gpt-4.1"),
+        default=RESEARCH_MODEL,
         metadata={
             "x_oap_ui_config": {
                 "type": "text",
-                "default": "openai:gpt-4.1",
+                "default": RESEARCH_MODEL,
                 "description": "Model for conducting research. NOTE: Make sure your Researcher Model supports the selected search API."
             }
         }
     )
     research_model_max_tokens: int = Field(
-        default=int(os.environ.get("RESEARCH_MODEL_MAX_TOKENS", 10000)),
+        default=RESEARCH_MAX_TOKENS,
         metadata={
             "x_oap_ui_config": {
                 "type": "number",
-                "default": 10000,
+                "default": RESEARCH_MAX_TOKENS,
                 "description": "Maximum output tokens for research model"
             }
         }
     )
     compression_model: str = Field(
-        default=os.environ.get("COMPRESSION_MODEL", "openai:gpt-4.1-mini"),
+        default=COMPRESSION_MODEL,
         metadata={
             "x_oap_ui_config": {
                 "type": "text",
-                "default": "openai:gpt-4.1-mini",
+                "default": COMPRESSION_MODEL,
                 "description": "Model for compressing research findings from sub-agents. NOTE: Make sure your Compression Model supports the selected search API."
             }
         }
     )
     compression_model_max_tokens: int = Field(
-        default=int(os.environ.get("COMPRESSION_MODEL_MAX_TOKENS", 8192)),
+        default=COMPRESSION_MAX_TOKENS,
         metadata={
             "x_oap_ui_config": {
                 "type": "number",
-                "default": 8192,
+                "default": COMPRESSION_MAX_TOKENS,
                 "description": "Maximum output tokens for compression model"
             }
         }
     )
     final_report_model: str = Field(
-        default=os.environ.get("FINAL_REPORT_MODEL", "openai:gpt-4.1"),
+        default=FINAL_REPORT_MODEL,
         metadata={
             "x_oap_ui_config": {
                 "type": "text",
-                "default": "openai:gpt-4.1",
+                "default": FINAL_REPORT_MODEL,
                 "description": "Model for writing the final report from all research findings"
             }
         }
     )
     final_report_model_max_tokens: int = Field(
-        default=int(os.environ.get("FINAL_REPORT_MODEL_MAX_TOKENS", 10000)),
+        default=FINAL_REPORT_MAX_TOKENS,
         metadata={
             "x_oap_ui_config": {
                 "type": "number",
-                "default": 10000,
+                "default": FINAL_REPORT_MAX_TOKENS,
                 "description": "Maximum output tokens for final report model"
             }
         }
