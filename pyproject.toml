@@ -43,6 +43,7 @@ dependencies = [
     "supabase>=2.15.3",
     "mcp>=1.9.4",
     "langchain-aws>=0.2.28",
+    "bedrock-agentcore>=0.1.0",
 ]
 
 [project.optional-dependencies]
