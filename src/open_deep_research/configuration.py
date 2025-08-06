@@ -29,14 +29,16 @@ class MCPConfig(BaseModel):
 
 
 # Get environment variables 
-SUMMARIZATION_MODEL = os.getenv("SUMMARIZATION_MODEL", "bedrock:us.anthropic.claude-3-haiku-20240307-v1:0")
-RESEARCH_MODEL = os.getenv("RESEARCH_MODEL", "bedrock:us.anthropic.claude-3-7-sonnet-20250219-v1:0")
-COMPRESSION_MODEL = os.getenv("COMPRESSION_MODEL", "bedrock:us.anthropic.claude-3-haiku-20240307-v1:0")
-FINAL_REPORT_MODEL = os.getenv("FINAL_REPORT_MODEL", "bedrock:us.anthropic.claude-3-7-sonnet-20250219-v1:0")
+SUMMARIZATION_MODEL = os.getenv("SUMMARIZATION_MODEL", "bedrock:anthropic.claude-3-haiku-20240307-v1:0")
+RESEARCH_MODEL = os.getenv("RESEARCH_MODEL", "bedrock:anthropic.claude-3-7-sonnet-20250219-v1:0")
+COMPRESSION_MODEL = os.getenv("COMPRESSION_MODEL", "bedrock:anthropic.claude-3-haiku-20240307-v1:0")
+FINAL_REPORT_MODEL = os.getenv("FINAL_REPORT_MODEL", "bedrock:anthropic.claude-3-7-sonnet-20250219-v1:0")
 SUMMARIZATION_MAX_TOKENS = int(os.getenv("SUMMARIZATION_MODEL_MAX_TOKENS", 8192))
 RESEARCH_MAX_TOKENS = int(os.getenv("RESEARCH_MODEL_MAX_TOKENS", 10000))
 COMPRESSION_MAX_TOKENS = int(os.getenv("COMPRESSION_MODEL_MAX_TOKENS", 8192))
 FINAL_REPORT_MAX_TOKENS = int(os.getenv("FINAL_REPORT_MODEL_MAX_TOKENS", 10000))
+# MCP server configuration
+TAVILY_MCP_URL = os.getenv("TAVILY_MCP_URL")
 
 class Configuration(BaseModel):
     # General Configuration
@@ -77,7 +79,7 @@ class Configuration(BaseModel):
     )
     # Research Configuration
     search_api: SearchAPI = Field(
-        default=SearchAPI.TAVILY,
+        default=SearchAPI.NONE,
         metadata={
             "x_oap_ui_config": {
                 "type": "select",
@@ -199,9 +201,16 @@ class Configuration(BaseModel):
             }
         }
     )
-    # MCP server configuration
+
     mcp_config: Optional[MCPConfig] = Field(
-        default=None,
+        default=MCPConfig(
+            url=TAVILY_MCP_URL,
+            tools=[
+                'tavily-integration___TavilySearchExtract', 
+                'tavily-integration___TavilySearchPost'
+            ],
+            auth_required=True
+        ) if TAVILY_MCP_URL else None,
         optional=True,
         metadata={
             "x_oap_ui_config": {
@@ -211,7 +220,7 @@ class Configuration(BaseModel):
         }
     )
     mcp_prompt: Optional[str] = Field(
-        default=None,
+        default="You have access to the Tavily API through an MCP (Model Context Protocol) Server. This allows you to perform web searches and gather real-time information from the internet to support your research tasks. Use the available MCP tools to search for current information, verify facts, and gather comprehensive data for your research.",
         optional=True,
         metadata={
             "x_oap_ui_config": {
@@ -220,7 +229,6 @@ class Configuration(BaseModel):
             }
         }
     )
-
 
     @classmethod
     def from_runnable_config(

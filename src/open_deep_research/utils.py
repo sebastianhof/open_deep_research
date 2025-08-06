@@ -123,34 +123,6 @@ async def summarize_webpage(model: BaseChatModel, webpage_content: str) -> str:
 ##########################
 # MCP Utils
 ##########################
-async def get_mcp_access_token(
-    supabase_token: str,
-    base_mcp_url: str,
-) -> Optional[Dict[str, Any]]:
-    try:
-        form_data = {
-            "client_id": "mcp_default",
-            "subject_token": supabase_token,
-            "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
-            "resource": base_mcp_url.rstrip("/") + "/mcp",
-            "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
-        }
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                base_mcp_url.rstrip("/") + "/oauth/token",
-                headers={"Content-Type": "application/x-www-form-urlencoded"},
-                data=form_data,
-            ) as token_response:
-                if token_response.status == 200:
-                    token_data = await token_response.json()
-                    return token_data
-                else:
-                    response_text = await token_response.text()
-                    logging.error(f"Token exchange failed: {response_text}")
-    except Exception as e:
-        logging.error(f"Error during token exchange: {e}")
-    return None
-
 async def get_tokens(config: RunnableConfig):
     store = get_store()
     thread_id = config.get("configurable", {}).get("thread_id")
@@ -183,20 +155,64 @@ async def set_tokens(config: RunnableConfig, tokens: dict[str, Any]):
     await store.aput((user_id, "tokens"), "data", tokens)
     return
 
-async def fetch_tokens(config: RunnableConfig) -> dict[str, Any]:
+async def fetch_tokens(config: RunnableConfig) -> dict[str, Any]:    
     current_tokens = await get_tokens(config)
     if current_tokens:
         return current_tokens
-    supabase_token = config.get("configurable", {}).get("x-supabase-access-token")
-    if not supabase_token:
-        return None
-    mcp_config = config.get("configurable", {}).get("mcp_config")
-    if not mcp_config or not mcp_config.get("url"):
-        return None
-    mcp_tokens = await get_mcp_access_token(supabase_token, mcp_config.get("url"))
+           
+    mcp_tokens = await fetch_cognito_token()
 
     await set_tokens(config, mcp_tokens)
     return mcp_tokens
+
+async def fetch_cognito_token() -> Optional[Dict[str, Any]]:
+    """
+    Fetch access token from AWS Cognito using client credentials flow.
+    
+    Returns:
+        dict: Token response if successful, None otherwise
+    """
+    user_pool_domain = os.getenv("COGNITO_USER_POOL_DOMAIN")
+    client_id = os.getenv("COGNITO_CLIENT_ID")
+    client_secret = os.getenv("COGNITO_CLIENT_SECRET")
+    
+    if not all([user_pool_domain, client_id, client_secret]):
+        return None
+    
+    # Construct the Cognito OAuth2 token endpoint using the full domain
+    token_url = f"{user_pool_domain.rstrip('/')}/oauth2/token"
+    
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    
+    data = {
+        "grant_type": "client_credentials",
+        "client_id": client_id,
+        "client_secret": client_secret
+    }
+    
+    try:
+        connector = aiohttp.TCPConnector(force_close=True, enable_cleanup_closed=True)
+        async with aiohttp.ClientSession(connector=connector) as session:
+            async with session.post(
+                token_url,
+                headers=headers,
+                data=data
+            ) as response:
+                if response.status == 200:
+                    token_data = await response.json()
+                    if token_data.get("access_token"):
+                        return token_data
+                    else:
+                        return None
+                else:
+                    error_text = await response.text()
+                    logging.error(f"Failed to fetch Cognito token. Status: {response.status}, Error: {error_text}")
+                    return None
+    except Exception as e:
+        logging.error(f"Exception occurred while fetching Cognito token: {e}")
+        return None
 
 def wrap_mcp_authenticate_tool(tool: StructuredTool) -> StructuredTool:
     old_coroutine = tool.coroutine
